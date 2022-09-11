@@ -126,8 +126,13 @@ const getPost = async (req,res) => {
 const getPosts = async (req,res) => {
     try{
         let userId = req.headers['valid-user']
-        let findPosts = await postModel.find({userId, isdeleted: false}).sort({ createdAt: 1 })
+        let findPosts = await postModel.find({userId, isdeleted: false},
+            {userId:0, likedUsers:0, unlikes:0, dislikedUsers:0, isdeleted:0, updatedAt:0, __v:0}).sort({ createdAt: 1 }).lean()
         
+        let comments = await commentModel.find({isdeleted: false})
+        findPosts.forEach(post => {
+            post.comments = comments.filter(cmnts => cmnts.postId.toString() === post._id.toString())
+        })
         res.status(200).send({data: findPosts})
     }
     catch(err){
